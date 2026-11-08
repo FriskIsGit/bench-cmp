@@ -24,9 +24,8 @@ go.work.sum
 # env file
 .env
 
-# scraper library test pages
-scraper/test_pages/**
-
 # Editor/IDE
 .idea/
 .vscode/
+
+bench-cmp

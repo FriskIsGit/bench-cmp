@@ -2,10 +2,13 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"bench-cmp/mark"
 )
+
+const CAMERA_BENCHMARK_NAME = "DXOMARK Camera"
 
 func execute(args *Arguments) error {
 	switch {
@@ -48,6 +51,7 @@ func executePhoneInfo(args *Arguments) error {
 	if err != nil {
 		return err
 	}
+	attachCameraScores(phone)
 
 	if args.JSONOutput {
 		return printJSON(phone)
@@ -75,6 +79,7 @@ func executeComparison(args *Arguments) error {
 	if err != nil {
 		return err
 	}
+	attachCameraScores(phoneA, phoneB)
 
 	if args.JSONOutput {
 		return printJSON(mark.Comparison{PhoneA: phoneA, PhoneB: phoneB})
@@ -106,4 +111,24 @@ func resolvePhone(name string, args *Arguments) (mark.SearchResult, error) {
 		fmt.Printf("Matched %q to %q\n", name, best.Name)
 	}
 	return best, nil
+}
+
+func attachCameraScores(phones ...*mark.Phone) {
+	scores, err := mark.FetchCameraScores()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "DXOMARK camera scores unavailable: %v\n", err)
+		return
+	}
+
+	for _, phone := range phones {
+		score, ok := scores.Lookup(phone.Name)
+		if !ok {
+			continue
+		}
+		phone.Benchmarks = append(phone.Benchmarks, mark.Benchmark{
+			Name:     CAMERA_BENCHMARK_NAME,
+			Score:    score,
+			HasScore: true,
+		})
+	}
 }

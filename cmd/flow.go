@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -91,6 +92,9 @@ func executeComparison(args *Arguments) error {
 
 func resolvePhone(name string, args *Arguments) (mark.SearchResult, error) {
 	results, err := mark.Search(name, args.Test, args.OSFilter)
+	if errors.Is(err, mark.ErrNoMatches) && !args.providedTest {
+		results, err = mark.Search(name, mark.FallbackTest(), args.OSFilter)
+	}
 	if err != nil {
 		return mark.SearchResult{}, err
 	}

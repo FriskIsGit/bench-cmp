@@ -35,6 +35,11 @@ func DefaultTest() Test {
 	return test
 }
 
+func FallbackTest() Test {
+	test, _ := LookupTest("WILD_LIFE_PERFORMANCE")
+	return test
+}
+
 func LookupTest(name string) (Test, bool) {
 	normalized := normalizeTestName(name)
 	for _, test := range allTests {

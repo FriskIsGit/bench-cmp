@@ -1,6 +1,7 @@
 package mark
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -14,6 +15,8 @@ const (
 	COMPARE_PAGE_PATH = "/compare/best-smartphones"
 )
 
+var ErrNoMatches = errors.New("no devices matched")
+
 func Search(query string, test Test, osFilter string) ([]SearchResult, error) {
 	pageURL := comparisonURL(test, osFilter, query)
 	page, err := scraper.FetchHtml(pageURL)
@@ -23,7 +26,7 @@ func Search(query string, test Test, osFilter string) ([]SearchResult, error) {
 
 	results := parseSearchResults(scraper.NewHtmlDoc(page))
 	if len(results) == 0 {
-		return nil, fmt.Errorf("no devices matched %q on 3DMark", query)
+		return nil, ErrNoMatches
 	}
 	return results, nil
 }

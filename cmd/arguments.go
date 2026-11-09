@@ -36,6 +36,7 @@ type Arguments struct {
 	Limit          int
 	ListTests      bool
 	providedSearch bool
+	providedTest   bool
 }
 
 func NewArguments() *Arguments {
@@ -74,6 +75,7 @@ func ParseArguments(args []string, version string) *Arguments {
 				failExit(fmt.Sprintf("Unknown test %q. Use --tests to list available tests.", args[i+1]))
 			}
 			a.Test = test
+			a.providedTest = true
 			i++
 			continue
 		}

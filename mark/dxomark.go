@@ -13,8 +13,31 @@ const DXOMARK_SMARTPHONES_URL = "https://www.dxomark.com/smartphones/"
 type CameraScores map[string]int
 
 func (scores CameraScores) Lookup(deviceName string) (int, bool) {
-	score, ok := scores[normalizeDeviceName(deviceName)]
-	return score, ok
+	key := normalizeDeviceName(deviceName)
+	if key == "" {
+		return 0, false
+	}
+	if score, ok := scores[key]; ok {
+		return score, true
+	}
+
+	bestKey := ""
+	ambiguous := false
+	for candidate := range scores {
+		if !strings.HasPrefix(candidate, key) {
+			continue
+		}
+		if bestKey == "" || len(candidate) < len(bestKey) {
+			bestKey = candidate
+			ambiguous = false
+		} else if len(candidate) == len(bestKey) {
+			ambiguous = true
+		}
+	}
+	if bestKey == "" || ambiguous {
+		return 0, false
+	}
+	return scores[bestKey], true
 }
 
 type DxomarkPhone struct {

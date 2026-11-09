@@ -11,6 +11,11 @@ import (
 
 const CAMERA_BENCHMARK_NAME = "DXOMARK Camera"
 
+type CameraTarget struct {
+	phone *mark.Phone
+	name  string
+}
+
 func execute(args *Arguments) error {
 	switch {
 	case args.SearchQuery != "":
@@ -52,7 +57,7 @@ func executePhoneInfo(args *Arguments) error {
 	if err != nil {
 		return err
 	}
-	attachCameraScores(phone)
+	attachCameraScores(CameraTarget{phone: phone, name: args.Phones[0]})
 
 	if args.JSONOutput {
 		return printJSON(phone)
@@ -80,7 +85,10 @@ func executeComparison(args *Arguments) error {
 	if err != nil {
 		return err
 	}
-	attachCameraScores(phoneA, phoneB)
+	attachCameraScores(
+		CameraTarget{phone: phoneA, name: args.Phones[0]},
+		CameraTarget{phone: phoneB, name: args.Phones[1]},
+	)
 
 	if args.JSONOutput {
 		return printJSON(mark.Comparison{PhoneA: phoneA, PhoneB: phoneB})
@@ -117,19 +125,22 @@ func resolvePhone(name string, args *Arguments) (mark.SearchResult, error) {
 	return best, nil
 }
 
-func attachCameraScores(phones ...*mark.Phone) {
+func attachCameraScores(targets ...CameraTarget) {
 	scores, err := mark.FetchCameraScores()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "DXOMARK camera scores unavailable: %v\n", err)
 		return
 	}
 
-	for _, phone := range phones {
-		score, ok := scores.Lookup(phone.Name)
+	for _, target := range targets {
+		score, ok := scores.Lookup(target.name)
+		if !ok {
+			score, ok = scores.Lookup(target.phone.Name)
+		}
 		if !ok {
 			continue
 		}
-		phone.Benchmarks = append(phone.Benchmarks, mark.Benchmark{
+		target.phone.Benchmarks = append(target.phone.Benchmarks, mark.Benchmark{
 			Name:     CAMERA_BENCHMARK_NAME,
 			Score:    score,
 			HasScore: true,
